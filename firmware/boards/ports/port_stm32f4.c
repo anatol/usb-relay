@@ -1,0 +1,32 @@
+#include "port_common.h"
+
+#include "stm32f4xx.h"
+
+static const relay_port_cfg_t cfg = {
+  .gpio_port = GPIOB,
+  .relay_count = 4,
+  .relay_pin = {(1u << 0), (1u << 1), (1u << 2), (1u << 10)},
+  .relay_active_high = {true, true, true, true},
+  .uid_base = 0x1FFF7A10u,
+  .dfu_rom_addr = 0x1FFF0000u,
+};
+
+const relay_port_cfg_t *relay_port_cfg(void) { return &cfg; }
+
+void relay_port_clock_enable(void) { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOBEN; }
+
+void relay_port_pin_output(uint16_t pin) {
+  volatile GPIO_TypeDef *port = (volatile GPIO_TypeDef *)cfg.gpio_port;
+  uint8_t bit = 0;
+  // pin is a single-bit mask, convert to index for MODER fields
+  while (((pin >> bit) & 1u) == 0u) bit++;
+  port->MODER &= ~(0x3u << (bit * 2u));
+  port->MODER |= (0x1u << (bit * 2u));
+}
+
+void relay_port_write_pin(uint16_t pin, bool high) {
+  volatile GPIO_TypeDef *port = (volatile GPIO_TypeDef *)cfg.gpio_port;
+  // BSRR lower half sets bits, upper half clears bits atomically.
+  if (high) port->BSRR = pin;
+  else port->BSRR = ((uint32_t)pin << 16u);
+}
