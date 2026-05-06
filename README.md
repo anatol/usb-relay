@@ -50,15 +50,6 @@ all off
 reboot-dfu
 ```
 
-Compatibility aliases are also supported:
-```text
-relay1 on
-relay1 off
-relay1 toggle
-relay1 pulse
-relay1 pulse 250
-```
-
 Typical responses:
 ```text
 OK

@@ -60,7 +60,7 @@ static bool parse_uint(const char *s, uint32_t *v) {
 
 static void cmd_help(void) {
   // Keep this list machine-parseable: one tokenized capability line.
-  command_write_line("OK help id version uptime state set toggle pulse setmask all reboot-dfu relayN");
+  command_write_line("OK help id version uptime state set toggle pulse setmask all reboot-dfu");
 }
 
 static void cmd_state(void) {
@@ -164,47 +164,6 @@ static void cmd_reboot_dfu(void) {
   relay_enter_dfu();
 }
 
-static void handle_alias(const char *cmd, char **argv, int argc) {
-  // Backward-compatible "relayN <action>" grammar for legacy scripts.
-  if (strncmp(cmd, "relay", 5) != 0) {
-    syntax_error("relayN", "relay<relay> <on|off|toggle|pulse [duration-ms]>");
-    return;
-  }
-
-  uint32_t relay;
-  if (!parse_uint(cmd + 5, &relay) || !relay_valid_index((uint8_t)relay)) {
-    command_write_line("ERR invalid-relay");
-    return;
-  }
-
-  if (argc < 2) {
-    syntax_error("relayN", "relay<relay> <on|off|toggle|pulse [duration-ms]>");
-    return;
-  }
-
-  if (strcmp(argv[1], "on") == 0) {
-    relay_set((uint8_t)relay, true);
-    command_write_line("OK");
-  } else if (strcmp(argv[1], "off") == 0) {
-    relay_set((uint8_t)relay, false);
-    command_write_line("OK");
-  } else if (strcmp(argv[1], "toggle") == 0) {
-    relay_toggle((uint8_t)relay);
-    command_write_line("OK");
-  } else if (strcmp(argv[1], "pulse") == 0) {
-    // Alias keeps historical default pulse width when omitted.
-    uint32_t duration = 1000;
-    if (argc >= 3 && !parse_uint(argv[2], &duration)) {
-      syntax_error("relayN", "relay<relay> pulse [duration-ms]");
-      return;
-    }
-    relay_pulse_start((uint8_t)relay, duration, now_ms);
-    command_write_line("OK");
-  } else {
-    syntax_error("relayN", "relay<relay> <on|off|toggle|pulse [duration-ms]>");
-  }
-}
-
 void command_process_line(const char *line) {
   char buf[128];
   char *argv[8];
@@ -238,6 +197,5 @@ void command_process_line(const char *line) {
   else if (strcmp(argv[0], "setmask") == 0) cmd_setmask(argv, argc);
   else if (strcmp(argv[0], "all") == 0) cmd_all(argv, argc);
   else if (strcmp(argv[0], "reboot-dfu") == 0) cmd_reboot_dfu();
-  else if (strncmp(argv[0], "relay", 5) == 0) handle_alias(argv[0], argv, argc);
   else syntax_error("unknown", "help");
 }
