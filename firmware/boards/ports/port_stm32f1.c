@@ -4,9 +4,12 @@
 
 static const relay_port_cfg_t cfg = {
   .gpio_port = GPIOB,
-  .relay_count = 4,
-  .relay_pin = {(1u << 12), (1u << 13), (1u << 14), (1u << 15)},
-  .relay_active_high = {false, false, false, false},
+  .relay_count = 8,
+  .relay_pin = {
+    (1u << 12), (1u << 13), (1u << 14), (1u << 15),
+    (1u << 8), (1u << 9), (1u << 10), (1u << 11),
+  },
+  .relay_active_high = {false, false, false, false, false, false, false, false},
   .uid_base = 0x1FFFF7E8u,
   .dfu_rom_addr = 0x1FFFF000u,
 };

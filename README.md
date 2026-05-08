@@ -20,11 +20,11 @@ This firmware currently targets three STM32 board families (default TinyUSB boar
 Hardware behavior is family-port specific (GPIO mapping, relay polarity, UID base, DFU ROM address).
 
 ## Relay GPIO Wiring
-Connect each USB relay module input (`IN1..IN4`) to the corresponding STM32 GPIO below, and connect grounds together.
+Connect each USB relay module input (`IN1..IN8`) to the corresponding STM32 GPIO below, and connect grounds together.
 
-- `STM32F0` (`stm32f072disco`): `PA0`, `PA1`, `PA2`, `PA3`
-- `STM32F1` (`stm32f103_bluepill`): `PB12`, `PB13`, `PB14`, `PB15` (active-low outputs)
-- `STM32F4` (`stm32f411blackpill`): `PB0`, `PB1`, `PB2`, `PB10`
+- `STM32F0` (`stm32f072disco`): `IN1=PA0`, `IN2=PA1`, `IN3=PA2`, `IN4=PA3`, `IN5=PA4`, `IN6=PA5`, `IN7=PA6`, `IN8=PA7`
+- `STM32F1` (`stm32f103_bluepill`): `IN1=PB12`, `IN2=PB13`, `IN3=PB14`, `IN4=PB15`, `IN5=PB8`, `IN6=PB9`, `IN7=PB10`, `IN8=PB11` (active-low outputs)
+- `STM32F4` (`stm32f411blackpill`): `IN1=PB0`, `IN2=PB1`, `IN3=PB2`, `IN4=PB10`, `IN5=PB3`, `IN6=PB4`, `IN7=PB5`, `IN8=PB7`
 
 ## Quick Start
 1. Build firmware for your board family.
