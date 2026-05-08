@@ -1,6 +1,6 @@
 # usb-relay-stm32
 
-USB relay firmware for STM32 boards that exposes a simple serial command interface over USB CDC-ACM.
+USB relay firmware for STM32 and RP2040 boards that exposes a simple serial command interface over USB CDC-ACM.
 
 ![stm32f1+usb relay](docs/usb-relay.jpg)
 
@@ -8,23 +8,25 @@ USB relay firmware for STM32 boards that exposes a simple serial command interfa
 ## What You Can Do With It
 - Control up to 8 relay outputs from a host computer over USB serial.
 - Turn relays on/off, toggle, pulse for a duration, or set all channels with a bitmask.
-- Identify devices by unique STM32-based serial number.
-- Reboot directly into STM32 ROM DFU mode from software.
+- Identify devices by unique MCU-based serial number.
+- Reboot directly into on-chip USB bootloader mode from software.
 
 ## Supported Devices
-This firmware currently targets three STM32 board families (default TinyUSB board in parentheses):
+This firmware currently targets these board families (default TinyUSB board in parentheses):
 - `STM32F0` (`stm32f072disco`)
 - `STM32F1` (`stm32f103_bluepill`)
 - `STM32F4` (`stm32f411blackpill`)
+- `RP2040` (`raspberry_pi_pico`)
 
 Hardware behavior is family-port specific (GPIO mapping, relay polarity, UID base, DFU ROM address).
 
 ## Relay GPIO Wiring
-Connect each USB relay module input (`IN1..IN8`) to the corresponding STM32 GPIO below, and connect grounds together.
+Connect each USB relay module input (`IN1..IN8`) to the corresponding MCU GPIO below, and connect grounds together.
 
 - `STM32F0` (`stm32f072disco`): `IN1=PA0`, `IN2=PA1`, `IN3=PA2`, `IN4=PA3`, `IN5=PA4`, `IN6=PA5`, `IN7=PA6`, `IN8=PA7`
 - `STM32F1` (`stm32f103_bluepill`): `IN1=PB12`, `IN2=PB13`, `IN3=PB14`, `IN4=PB15`, `IN5=PB8`, `IN6=PB9`, `IN7=PB10`, `IN8=PB11` (active-low outputs)
 - `STM32F4` (`stm32f411blackpill`): `IN1=PB0`, `IN2=PB1`, `IN3=PB2`, `IN4=PB10`, `IN5=PB3`, `IN6=PB4`, `IN7=PB5`, `IN8=PB7`
+- `RP2040` (generic): `IN1=GP2`, `IN2=GP3`, `IN3=GP4`, `IN4=GP5`, `IN5=GP6`, `IN6=GP7`, `IN7=GP8`, `IN8=GP9`
 
 ## Quick Start
 1. Build firmware for your board family.
@@ -77,7 +79,7 @@ Notes:
 ```bash
 cd firmware
 git clone https://github.com/hathach/tinyusb.git ../tinyusb
-python3 ../tinyusb/tools/get_deps.py stm32f0 stm32f1 stm32f4
+python3 ../tinyusb/tools/get_deps.py stm32f0 stm32f1 stm32f4 rp2040
 ```
 
 ### Configure + build
@@ -90,6 +92,9 @@ cmake --build build-f1
 
 cmake -S firmware -B build-f4 -DBOARD_FAMILY=STM32F4
 cmake --build build-f4
+
+cmake -S firmware -B build-rp2040 -DBOARD_FAMILY=RP2040
+cmake --build build-rp2040
 ```
 
 Output artifacts include `.elf`, `.bin`, `.hex` in the selected build directory.
@@ -106,7 +111,7 @@ cmake --build build-f4 --target usb-relay-stm32-stlink
 
 ### ST-Link (direct tool, flash `.bin`)
 If you prefer flashing directly (without CMake flash targets), use STM32CubeProgrammer CLI.
-This works on both macOS and Linux.
+Linux CLI example:
 
 ```bash
 # STM32F0 build output
@@ -139,6 +144,34 @@ cmake --build build-f1 --target usb-relay-stm32-jlink
 cmake --build build-f4 --target usb-relay-stm32-jlink
 ```
 
+### RP2040 (Linux CLI)
+RP2040 boards expose a ROM USB mass-storage bootloader (`RPI-RP2`) in BOOTSEL mode.
+
+Enter BOOTSEL mode:
+1. Hold `BOOTSEL`.
+2. Plug in USB (or press reset while holding `BOOTSEL`).
+3. Release `BOOTSEL` after the board appears as `RPI-RP2`.
+
+Flash by copying UF2 from the shell:
+```bash
+# Optional: verify the RP2040 boot volume is present
+lsblk -o NAME,LABEL,MOUNTPOINT | grep RPI-RP2
+
+# Copy firmware UF2 to the mounted RP2040 drive
+cp build-rp2040/usb-relay-stm32.uf2 /media/$USER/RPI-RP2/
+sync
+```
+
+Optional `picotool` workflow (Linux CLI):
+```bash
+# If the board is already running this firmware, ask it to reboot to USB bootloader:
+picotool reboot -u
+
+# Program flash directly, then reboot
+picotool load -f build-rp2040/usb-relay-stm32.elf
+picotool reboot
+```
+
 ## Linux Non-Root Access (udev)
 This repo includes a udev rule for VID:PID `cafe:4010`.
 
@@ -157,4 +190,5 @@ If you change USB VID/PID in `firmware/src/usb_descriptors.c`, update `udev/99-u
   - `firmware/boards/ports/port_stm32f0.c`
   - `firmware/boards/ports/port_stm32f1.c`
   - `firmware/boards/ports/port_stm32f4.c`
-- `reboot-dfu` jumps to STM32 system-memory DFU ROM entry point for the active family port.
+  - `firmware/boards/ports/port_rp2040.c`
+- `reboot-dfu` jumps to STM32 system-memory DFU ROM on STM32, and enters USB boot mode on RP2040.

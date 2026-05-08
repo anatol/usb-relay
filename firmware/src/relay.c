@@ -6,6 +6,10 @@
 #include "bsp/board_api.h"
 #include "port_common.h"
 
+#if defined(BOARD_FAMILY_RP2040)
+#include "pico/bootrom.h"
+#endif
+
 static uint32_t relay_mask;
 static uint32_t uptime_ms;
 static uint32_t pulse_deadline[RELAY_MAX_COUNT];
@@ -126,6 +130,11 @@ static inline void set_msp(uint32_t sp) {
 }
 
 void relay_enter_dfu(void) {
+#if defined(BOARD_FAMILY_RP2040)
+  reset_usb_boot(0u, 0u);
+  while (1) {
+  }
+#else
   const relay_port_cfg_t *cfg = relay_port_cfg();
   // Jump directly to system-memory DFU ROM vector table.
   irq_disable();
@@ -136,4 +145,5 @@ void relay_enter_dfu(void) {
   ((entry_fn_t)entry)();
   while (1) {
   }
+#endif
 }
