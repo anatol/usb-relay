@@ -205,8 +205,13 @@ static void cmd_all(char **argv, int argc) {
 }
 
 static void cmd_reboot_dfu(void) {
+  if (!relay_dfu_reboot_available()) {
+    command_writef("ERR cannot enter DFU mode: %s", relay_dfu_reboot_unavailable_reason());
+    return;
+  }
   // ACK first so host gets a deterministic final response before reboot.
-  command_write_line("OK");
+  // If this succeeded, USB will disconnect immediately after this response.
+  command_write_line("OK entering DFU bootloader");
   relay_enter_dfu();
 }
 

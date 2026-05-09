@@ -22,4 +22,6 @@ uint32_t relay_uptime_ms(void);
 void relay_tick_1ms(void);
 
 void relay_serial_hex(char *out, uint32_t out_len);
+bool relay_dfu_reboot_available(void);
+const char *relay_dfu_reboot_unavailable_reason(void);
 void relay_enter_dfu(void);

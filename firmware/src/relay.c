@@ -8,6 +8,12 @@
 
 #if defined(BOARD_FAMILY_RP2040)
 #include "pico/bootrom.h"
+#elif defined(BOARD_FAMILY_STM32F0)
+#include "stm32f0xx.h"
+#elif defined(BOARD_FAMILY_STM32F1)
+#include "stm32f1xx.h"
+#elif defined(BOARD_FAMILY_STM32F4)
+#include "stm32f4xx.h"
 #endif
 
 static uint32_t relay_mask;
@@ -139,6 +145,45 @@ void relay_serial_hex(char *out, uint32_t out_len) {
   out[n * 2u] = '\0';
 }
 
+static const char *dfu_unavailable_reason = "DFU reboot is not supported on this board";
+
+static bool is_sram_addr(uint32_t addr) {
+  return (addr & 0xFF000000u) == 0x20000000u;
+}
+
+static bool is_thumb_code_addr(uint32_t addr) {
+  return (addr & 1u) != 0u;
+}
+
+bool relay_dfu_reboot_available(void) {
+  const relay_port_cfg_t *cfg = relay_port_cfg();
+
+#if defined(BOARD_FAMILY_RP2040)
+  return true;
+#else
+  if (cfg->dfu_rom_addr == 0u) {
+    dfu_unavailable_reason = "DFU ROM address is not configured for this board";
+    return false;
+  }
+
+  uint32_t stack = *(volatile uint32_t *)cfg->dfu_rom_addr;
+  uint32_t entry = *(volatile uint32_t *)(cfg->dfu_rom_addr + 4u);
+  if (stack == 0u || stack == 0xFFFFFFFFu || !is_sram_addr(stack)) {
+    dfu_unavailable_reason = "DFU ROM vector table is invalid (stack pointer)";
+    return false;
+  }
+  if (entry == 0u || entry == 0xFFFFFFFFu || !is_thumb_code_addr(entry)) {
+    dfu_unavailable_reason = "DFU ROM vector table is invalid (entry point)";
+    return false;
+  }
+  return true;
+#endif
+}
+
+const char *relay_dfu_reboot_unavailable_reason(void) {
+  return dfu_unavailable_reason;
+}
+
 typedef void (*entry_fn_t)(void);
 
 static inline void irq_disable(void) {
@@ -149,7 +194,36 @@ static inline void set_msp(uint32_t sp) {
   __asm volatile ("msr msp, %0" : : "r" (sp));
 }
 
+static void prepare_stm32_rom_boot(uint32_t rom_base) {
+  // Stop SysTick and clear NVIC state so the ROM starts from a clean context.
+  SysTick->CTRL = 0u;
+  SysTick->LOAD = 0u;
+  SysTick->VAL = 0u;
+
+  const uint32_t nvic_words = (uint32_t)(sizeof(NVIC->ICER) / sizeof(NVIC->ICER[0]));
+  for (uint32_t i = 0; i < nvic_words; i++) {
+    NVIC->ICER[i] = 0xFFFFFFFFu;
+    NVIC->ICPR[i] = 0xFFFFFFFFu;
+  }
+
+#if defined(BOARD_FAMILY_STM32F1)
+  // F1 ROM expects system memory at 0x00000000.
+  const uint32_t mem_mode_mask = 0x3u;
+  RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
+  AFIO->MAPR = (AFIO->MAPR & ~mem_mode_mask) | 0x1u;
+#endif
+
+#if defined(__VTOR_PRESENT) && (__VTOR_PRESENT == 1U)
+  SCB->VTOR = rom_base;
+#else
+  (void)rom_base;
+#endif
+  __DSB();
+  __ISB();
+}
+
 void relay_enter_dfu(void) {
+  if (!relay_dfu_reboot_available()) return;
 #if defined(BOARD_FAMILY_RP2040)
   reset_usb_boot(0u, 0u);
   while (1) {
@@ -158,6 +232,7 @@ void relay_enter_dfu(void) {
   const relay_port_cfg_t *cfg = relay_port_cfg();
   // Jump directly to system-memory DFU ROM vector table.
   irq_disable();
+  prepare_stm32_rom_boot(cfg->dfu_rom_addr);
   // ROM image starts with initial MSP then reset handler entry.
   uint32_t stack = *(volatile uint32_t *)cfg->dfu_rom_addr;
   uint32_t entry = *(volatile uint32_t *)(cfg->dfu_rom_addr + 4u);
