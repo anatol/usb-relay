@@ -180,6 +180,41 @@ picotool load -f build-rp2040/usb-relay-stm32.elf
 picotool reboot
 ```
 
+### Flash Using `reboot-dfu` (all supported boards)
+If the board is already running this firmware, you can enter bootloader mode over USB serial:
+
+```bash
+# Replace with your CDC device (for example /dev/ttyACM0)
+printf "reboot-dfu\n" > /dev/ttyACM0
+```
+
+#### STM32F0 / STM32F1 / STM32F4
+After `reboot-dfu`, the MCU jumps to STM32 ROM DFU bootloader. Flash with `dfu-util`:
+
+```bash
+# STM32F0
+dfu-util -a 0 -s 0x08000000:leave -D build-f0/usb-relay-stm32.bin
+
+# STM32F1
+dfu-util -a 0 -s 0x08000000:leave -D build-f1/usb-relay-stm32.bin
+
+# STM32F4
+dfu-util -a 0 -s 0x08000000:leave -D build-f4/usb-relay-stm32.bin
+```
+
+#### RP2040
+After `reboot-dfu`, RP2040 enters USB boot mode (`RPI-RP2`). Flash either UF2 or with `picotool`:
+
+```bash
+# UF2 copy method
+cp build-rp2040/usb-relay-stm32.uf2 /media/$USER/RPI-RP2/
+sync
+
+# Optional picotool method
+picotool load -f build-rp2040/usb-relay-stm32.elf
+picotool reboot
+```
+
 ## Linux Non-Root Access (udev)
 This repo includes a udev rule for VID:PID `cafe:4010`.
 
