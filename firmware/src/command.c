@@ -12,6 +12,8 @@
 #include "tusb.h"
 
 static uint32_t now_ms;
+// Default pulse length when `pulse <relay>` omits duration: 1 second.
+static const uint32_t kPulseDefaultDurationMs = 1000u;
 
 void command_init(void) {
   now_ms = 0;
@@ -122,18 +124,20 @@ static void cmd_toggle(char **argv, int argc) {
 
 static void cmd_pulse(char **argv, int argc) {
   uint32_t relay;
-  uint32_t duration;
-  if (argc != 3) {
-    syntax_error("pulse", "pulse <relay> <duration-ms>");
+  uint32_t duration = kPulseDefaultDurationMs;
+  if (argc != 2 && argc != 3) {
+    syntax_error("pulse", "pulse <relay> [duration-ms]");
     return;
   }
   if (!parse_uint(argv[1], &relay) || !relay_valid_index((uint8_t)relay)) {
     command_write_line("ERR invalid-relay");
     return;
   }
-  if (!parse_uint(argv[2], &duration) || duration == 0u) {
-    syntax_error("pulse", "pulse <relay> <duration-ms>");
-    return;
+  if (argc == 3) {
+    if (!parse_uint(argv[2], &duration) || duration == 0u) {
+      syntax_error("pulse", "pulse <relay> [duration-ms]");
+      return;
+    }
   }
   relay_pulse_start((uint8_t)relay, duration, now_ms);
   command_write_line("OK");
