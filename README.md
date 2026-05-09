@@ -76,10 +76,10 @@ Notes:
 - TinyUSB checkout at `tinyusb` (or vendored in `firmware/tinyusb`)
 
 ### Fetch TinyUSB + board deps
+Run from the project root:
 ```bash
-cd firmware
-git clone https://github.com/hathach/tinyusb.git ../tinyusb
-python3 ../tinyusb/tools/get_deps.py stm32f0 stm32f1 stm32f4 rp2040
+git clone https://github.com/hathach/tinyusb.git
+python3 tinyusb/tools/get_deps.py stm32f0 stm32f1 stm32f4 rp2040
 ```
 
 ### Configure + build
