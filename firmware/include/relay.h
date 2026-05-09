@@ -12,6 +12,7 @@ void relay_set_mask(uint32_t mask);
 void relay_all_off(void);
 uint32_t relay_get_mask(void);
 bool relay_valid_index(uint8_t relay);
+uint8_t relay_supported_count(void);
 
 void relay_pulse_start(uint8_t relay, uint32_t duration_ms, uint32_t now_ms);
 void relay_pulse_poll(uint32_t now_ms);

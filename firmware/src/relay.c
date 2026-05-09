@@ -47,6 +47,10 @@ bool relay_valid_index(uint8_t relay) {
   return relay >= 1u && relay <= count;
 }
 
+uint8_t relay_supported_count(void) {
+  return relay_count();
+}
+
 void relay_set(uint8_t relay, bool on) {
   if (!relay_valid_index(relay)) return;
   uint8_t idx = relay - 1u;

@@ -197,5 +197,4 @@ void command_process_line(const char *line) {
   else if (strcmp(argv[0], "setmask") == 0) cmd_setmask(argv, argc);
   else if (strcmp(argv[0], "all") == 0) cmd_all(argv, argc);
   else if (strcmp(argv[0], "reboot-dfu") == 0) cmd_reboot_dfu();
-  else syntax_error("unknown", "help");
 }

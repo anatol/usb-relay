@@ -8,9 +8,25 @@
 static char rx_line[128];
 static uint32_t rx_len;
 
+#if defined(BOARD_FAMILY_STM32F0)
+#define USB_RELAY_BOARD_NAME "STM32F0"
+#elif defined(BOARD_FAMILY_STM32F1)
+#define USB_RELAY_BOARD_NAME "STM32F1"
+#elif defined(BOARD_FAMILY_STM32F4)
+#define USB_RELAY_BOARD_NAME "STM32F4"
+#elif defined(BOARD_FAMILY_RP2040)
+#define USB_RELAY_BOARD_NAME "RP2040"
+#else
+#define USB_RELAY_BOARD_NAME "UNKNOWN"
+#endif
+
 void tud_mount_cb(void) {
-  // Host-visible readiness marker right after CDC mount completes.
-  command_write_line("OK");
+  char board_id[25];
+  relay_serial_hex(board_id, sizeof(board_id));
+  command_writef("HELLO board=%s boardid=%s relays=%u",
+                 USB_RELAY_BOARD_NAME,
+                 board_id,
+                 (unsigned)relay_supported_count());
 }
 
 void tud_cdc_rx_cb(uint8_t itf) {
