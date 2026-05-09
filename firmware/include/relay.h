@@ -15,6 +15,7 @@ bool relay_valid_index(uint8_t relay);
 uint8_t relay_supported_count(void);
 
 void relay_pulse_start(uint8_t relay, uint32_t duration_ms, uint32_t now_ms);
+void relay_pulse_forced(uint8_t relay, bool start_on, uint32_t duration_ms, uint32_t now_ms);
 void relay_pulse_poll(uint32_t now_ms);
 
 uint32_t relay_uptime_ms(void);

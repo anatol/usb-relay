@@ -62,7 +62,7 @@ static bool parse_uint(const char *s, uint32_t *v) {
 
 static void cmd_help(void) {
   // Keep this list machine-parseable: one tokenized capability line.
-  command_write_line("OK help id version uptime state set toggle pulse setmask all reboot-dfu");
+  command_write_line("OK help id version uptime state set toggle pulse pulse-on pulse-off setmask all reboot-dfu");
 }
 
 static void cmd_state(void) {
@@ -143,6 +143,48 @@ static void cmd_pulse(char **argv, int argc) {
   command_write_line("OK");
 }
 
+static void cmd_pulse_on(char **argv, int argc) {
+  uint32_t relay;
+  uint32_t duration = kPulseDefaultDurationMs;
+  if (argc != 2 && argc != 3) {
+    syntax_error("pulse-on", "pulse-on <relay> [duration-ms]");
+    return;
+  }
+  if (!parse_uint(argv[1], &relay) || !relay_valid_index((uint8_t)relay)) {
+    command_write_line("ERR invalid-relay");
+    return;
+  }
+  if (argc == 3) {
+    if (!parse_uint(argv[2], &duration) || duration == 0u) {
+      syntax_error("pulse-on", "pulse-on <relay> [duration-ms]");
+      return;
+    }
+  }
+  relay_pulse_forced((uint8_t)relay, true, duration, now_ms);
+  command_write_line("OK");
+}
+
+static void cmd_pulse_off(char **argv, int argc) {
+  uint32_t relay;
+  uint32_t duration = kPulseDefaultDurationMs;
+  if (argc != 2 && argc != 3) {
+    syntax_error("pulse-off", "pulse-off <relay> [duration-ms]");
+    return;
+  }
+  if (!parse_uint(argv[1], &relay) || !relay_valid_index((uint8_t)relay)) {
+    command_write_line("ERR invalid-relay");
+    return;
+  }
+  if (argc == 3) {
+    if (!parse_uint(argv[2], &duration) || duration == 0u) {
+      syntax_error("pulse-off", "pulse-off <relay> [duration-ms]");
+      return;
+    }
+  }
+  relay_pulse_forced((uint8_t)relay, false, duration, now_ms);
+  command_write_line("OK");
+}
+
 static void cmd_setmask(char **argv, int argc) {
   uint32_t mask;
   if (argc != 2 || !parse_uint(argv[1], &mask)) {
@@ -198,6 +240,8 @@ void command_process_line(const char *line) {
   else if (strcmp(argv[0], "set") == 0) cmd_set(argv, argc);
   else if (strcmp(argv[0], "toggle") == 0) cmd_toggle(argv, argc);
   else if (strcmp(argv[0], "pulse") == 0) cmd_pulse(argv, argc);
+  else if (strcmp(argv[0], "pulse-on") == 0) cmd_pulse_on(argv, argc);
+  else if (strcmp(argv[0], "pulse-off") == 0) cmd_pulse_off(argv, argc);
   else if (strcmp(argv[0], "setmask") == 0) cmd_setmask(argv, argc);
   else if (strcmp(argv[0], "all") == 0) cmd_all(argv, argc);
   else if (strcmp(argv[0], "reboot-dfu") == 0) cmd_reboot_dfu();

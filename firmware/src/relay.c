@@ -13,6 +13,7 @@
 static uint32_t relay_mask;
 static uint32_t uptime_ms;
 static uint32_t pulse_deadline[RELAY_MAX_COUNT];
+static uint32_t pulse_restore_mask;
 
 static uint8_t relay_count(void) {
   const relay_port_cfg_t *cfg = relay_port_cfg();
@@ -33,6 +34,7 @@ void relay_init(void) {
   uint8_t count = relay_count();
   relay_mask = 0;
   uptime_ms = 0;
+  pulse_restore_mask = 0;
   memset(pulse_deadline, 0, sizeof(pulse_deadline));
 
   relay_port_clock_enable();
@@ -84,7 +86,20 @@ uint32_t relay_get_mask(void) {
 void relay_pulse_start(uint8_t relay, uint32_t duration_ms, uint32_t now_ms) {
   if (!relay_valid_index(relay)) return;
   uint8_t idx = relay - 1u;
-  relay_set(relay, true);
+  bool restore_state = (relay_mask & (1u << idx)) != 0u;
+  if (restore_state) pulse_restore_mask |= (1u << idx);
+  else pulse_restore_mask &= ~(1u << idx);
+  relay_toggle(relay);
+  // Absolute deadline keeps pulse logic simple in the poll path.
+  pulse_deadline[idx] = now_ms + duration_ms;
+}
+
+void relay_pulse_forced(uint8_t relay, bool start_on, uint32_t duration_ms, uint32_t now_ms) {
+  if (!relay_valid_index(relay)) return;
+  uint8_t idx = relay - 1u;
+  if (start_on) pulse_restore_mask &= ~(1u << idx);
+  else pulse_restore_mask |= (1u << idx);
+  relay_set(relay, start_on);
   // Absolute deadline keeps pulse logic simple in the poll path.
   pulse_deadline[idx] = now_ms + duration_ms;
 }
@@ -96,7 +111,8 @@ void relay_pulse_poll(uint32_t now_ms) {
     // Signed-delta check keeps comparisons valid across uint32 wrap.
     if (dl != 0u && (int32_t)(now_ms - dl) >= 0) {
       pulse_deadline[i] = 0u;
-      relay_set(i + 1u, false);
+      relay_set(i + 1u, (pulse_restore_mask & (1u << i)) != 0u);
+      pulse_restore_mask &= ~(1u << i);
     }
   }
 }

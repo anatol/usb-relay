@@ -47,10 +47,17 @@ set 1 on
 set 1 off
 toggle 1
 pulse 1 1000
+pulse-on 1 250
+pulse-off 1 250
 setmask 0xff
 all off
 reboot-dfu
 ```
+
+Pulse command behavior:
+- `pulse <relay> [duration-ms]`: invert current state immediately, then restore previous state after duration.
+- `pulse-on <relay> [duration-ms]`: force `on` immediately, then force `off` after duration.
+- `pulse-off <relay> [duration-ms]`: force `off` immediately, then force `on` after duration.
 
 Typical responses:
 ```text
@@ -67,6 +74,7 @@ Notes:
 - Relay indices are `1..N` where `N` is board-configured (up to 8).
 - Commands are line-oriented (`\n` or `\r\n`).
 - On USB mount, firmware emits `OK`.
+- Default pulse duration is `1000` ms when omitted.
 
 ## Build
 ### Prerequisites
