@@ -1,4 +1,4 @@
-# usb-relay-stm32
+# USB Relay firmware
 
 USB relay firmware for STM32 and RP2040 boards that exposes a simple serial command interface over USB CDC-ACM.
 
@@ -30,7 +30,7 @@ Connect each USB relay module input (`IN1..IN8`) to the corresponding MCU GPIO b
 
 ## Quick Start
 1. Build firmware for your board family.
-2. Flash with ST-Link or J-Link.
+2. Flash with ST-Link/J-Link (STM32) or UF2/picotool (RP2040).
 3. Connect over USB CDC serial from your host.
 4. Send line-based commands and parse machine-readable responses.
 
@@ -75,7 +75,7 @@ Notes:
 - Python 3
 - TinyUSB checkout at `tinyusb` (or vendored in `firmware/tinyusb`)
 
-### Fetch TinyUSB + STM32 deps
+### Fetch TinyUSB + board deps
 ```bash
 cd firmware
 git clone https://github.com/hathach/tinyusb.git ../tinyusb
@@ -185,7 +185,7 @@ If you change USB VID/PID in `firmware/src/usb_descriptors.c`, update `udev/99-u
 ## Internal Implementation Details
 - TinyUSB device stack with CDC-ACM transport.
 - Line-based command parser with machine-readable status/error responses.
-- USB serial descriptor string is generated from STM32 96-bit unique ID.
+- USB serial descriptor string is generated from board unique ID (STM32 96-bit UID; RP2040 board ID zero-padded to 12 bytes).
 - Relay ports are split by family:
   - `firmware/boards/ports/port_stm32f0.c`
   - `firmware/boards/ports/port_stm32f1.c`
