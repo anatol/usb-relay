@@ -234,7 +234,10 @@ void command_process_line(const char *line) {
 
   // Some terminal clients can send control/escape sequences on connect.
   // Ignore non-command prefixes instead of emitting an error immediately.
-  if (!isalpha((unsigned char)argv[0][0])) return;
+  if (!isalpha((unsigned char)argv[0][0])) {
+    command_write_line("ERR unknown-command");
+    return;
+  }
 
   // Flat dispatch keeps command latency deterministic and avoids heap use.
   if (strcmp(argv[0], "help") == 0) cmd_help();
@@ -250,4 +253,5 @@ void command_process_line(const char *line) {
   else if (strcmp(argv[0], "setmask") == 0) cmd_setmask(argv, argc);
   else if (strcmp(argv[0], "all") == 0) cmd_all(argv, argc);
   else if (strcmp(argv[0], "reboot-dfu") == 0) cmd_reboot_dfu();
+  else command_write_line("ERR unknown-command");
 }
