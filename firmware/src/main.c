@@ -23,10 +23,10 @@ static uint32_t rx_len;
 void tud_mount_cb(void) {
   char board_id[25];
   relay_serial_hex(board_id, sizeof(board_id));
-  command_writef("HELLO board=%s boardid=%s relays=%u",
+  command_writef("HELLO Anatol Pomozov USB Relay version=%s board=%s id=%s",
+                 USB_RELAY_FW_GIT_VERSION,
                  USB_RELAY_BOARD_NAME,
-                 board_id,
-                 (unsigned)relay_supported_count());
+                 board_id);
 }
 
 void tud_cdc_rx_cb(uint8_t itf) {
