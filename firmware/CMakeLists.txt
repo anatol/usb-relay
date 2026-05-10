@@ -51,7 +51,7 @@ family_initialize_project(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR})
 if (RTOS STREQUAL zephyr)
   set(EXE_NAME app)
 else()
-  set(EXE_NAME usb-relay-stm32)
+  set(EXE_NAME usb-relay)
   add_executable(${EXE_NAME})
 endif()
 

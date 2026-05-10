@@ -52,8 +52,8 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
 
 static const char *string_desc_arr[] = {
   (const char[]){0x09, 0x04},
-  "usb-relay-stm32",
-  "USB Relay",
+  "usb-relay",
+  "Anatol Pomozov USB Relay",
   NULL,
   "CDC"
 };

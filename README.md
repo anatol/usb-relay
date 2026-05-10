@@ -66,7 +66,7 @@ ERR invalid-relay
 ERR invalid-arg
 STATE 0x03
 ID 045101780587252555FFC660
-VERSION usb-relay-stm32 0.1.0
+VERSION usb-relay 0.1.0
 UPTIME 12345
 ```
 
@@ -112,9 +112,9 @@ Use TinyUSB family flash targets after configure/build.
 
 ### ST-Link
 ```bash
-cmake --build build-f0 --target usb-relay-stm32-stlink
-cmake --build build-f1 --target usb-relay-stm32-stlink
-cmake --build build-f4 --target usb-relay-stm32-stlink
+cmake --build build-f0 --target usb-relay-stlink
+cmake --build build-f1 --target usb-relay-stlink
+cmake --build build-f4 --target usb-relay-stlink
 ```
 
 ### ST-Link (direct tool, flash `.bin`)
@@ -124,32 +124,32 @@ Linux CLI example:
 ```bash
 # STM32F0 build output
 STM32_Programmer_CLI --connect port=swd \
-  --write build-f0/usb-relay-stm32.bin 0x08000000 \
+  --write build-f0/usb-relay.bin 0x08000000 \
   --verify --go
 
 # STM32F1 build output
 STM32_Programmer_CLI --connect port=swd \
-  --write build-f1/usb-relay-stm32.bin 0x08000000 \
+  --write build-f1/usb-relay.bin 0x08000000 \
   --verify --go
 
 # STM32F4 build output
 STM32_Programmer_CLI --connect port=swd \
-  --write build-f4/usb-relay-stm32.bin 0x08000000 \
+  --write build-f4/usb-relay.bin 0x08000000 \
   --verify --go
 ```
 
 Optional alternative with `st-flash` (from `stlink`):
 ```bash
-st-flash --reset write build-f0/usb-relay-stm32.bin 0x08000000
-st-flash --reset write build-f1/usb-relay-stm32.bin 0x08000000
-st-flash --reset write build-f4/usb-relay-stm32.bin 0x08000000
+st-flash --reset write build-f0/usb-relay.bin 0x08000000
+st-flash --reset write build-f1/usb-relay.bin 0x08000000
+st-flash --reset write build-f4/usb-relay.bin 0x08000000
 ```
 
 ### J-Link
 ```bash
-cmake --build build-f0 --target usb-relay-stm32-jlink
-cmake --build build-f1 --target usb-relay-stm32-jlink
-cmake --build build-f4 --target usb-relay-stm32-jlink
+cmake --build build-f0 --target usb-relay-jlink
+cmake --build build-f1 --target usb-relay-jlink
+cmake --build build-f4 --target usb-relay-jlink
 ```
 
 ### RP2040 (Linux CLI)
@@ -166,7 +166,7 @@ Flash by copying UF2 from the shell:
 lsblk -o NAME,LABEL,MOUNTPOINT | grep RPI-RP2
 
 # Copy firmware UF2 to the mounted RP2040 drive
-cp build-rp2040/usb-relay-stm32.uf2 /media/$USER/RPI-RP2/
+cp build-rp2040/usb-relay.uf2 /media/$USER/RPI-RP2/
 sync
 ```
 
@@ -176,7 +176,7 @@ Optional `picotool` workflow (Linux CLI):
 picotool reboot -u
 
 # Program flash directly, then reboot
-picotool load -f build-rp2040/usb-relay-stm32.elf
+picotool load -f build-rp2040/usb-relay.elf
 picotool reboot
 ```
 
@@ -193,13 +193,13 @@ After `reboot-dfu`, the MCU jumps to STM32 ROM DFU bootloader. Flash with `dfu-u
 
 ```bash
 # STM32F0
-dfu-util -a 0 -s 0x08000000:leave -D build-f0/usb-relay-stm32.bin
+dfu-util -a 0 -s 0x08000000:leave -D build-f0/usb-relay.bin
 
 # STM32F1
-dfu-util -a 0 -s 0x08000000:leave -D build-f1/usb-relay-stm32.bin
+dfu-util -a 0 -s 0x08000000:leave -D build-f1/usb-relay.bin
 
 # STM32F4
-dfu-util -a 0 -s 0x08000000:leave -D build-f4/usb-relay-stm32.bin
+dfu-util -a 0 -s 0x08000000:leave -D build-f4/usb-relay.bin
 ```
 
 #### RP2040
@@ -207,11 +207,11 @@ After `reboot-dfu`, RP2040 enters USB boot mode (`RPI-RP2`). Flash either UF2 or
 
 ```bash
 # UF2 copy method
-cp build-rp2040/usb-relay-stm32.uf2 /media/$USER/RPI-RP2/
+cp build-rp2040/usb-relay.uf2 /media/$USER/RPI-RP2/
 sync
 
 # Optional picotool method
-picotool load -f build-rp2040/usb-relay-stm32.elf
+picotool load -f build-rp2040/usb-relay.elf
 picotool reboot
 ```
 
@@ -223,7 +223,7 @@ Install:
 ./udev/install-udev-rules.sh
 ```
 
-If you change USB VID/PID in `firmware/src/usb_descriptors.c`, update `udev/99-usb-relay-stm32.rules` accordingly.
+If you change USB VID/PID in `firmware/src/usb_descriptors.c`, update `udev/99-usb-relay.rules` accordingly.
 
 ## Internal Implementation Details
 - TinyUSB device stack with CDC-ACM transport.

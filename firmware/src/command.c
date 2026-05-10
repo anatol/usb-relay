@@ -76,7 +76,7 @@ static void cmd_id(void) {
 }
 
 static void cmd_version(void) {
-  command_writef("VERSION usb-relay-stm32 %s", USB_RELAY_FW_VERSION);
+  command_writef("VERSION usb-relay %s", USB_RELAY_FW_VERSION);
 }
 
 static void cmd_uptime(void) {
